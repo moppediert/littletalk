@@ -6,6 +6,7 @@ import React from "react";
 
 export default function Home() {
   const [self, setSelf] = React.useState<Peer>(() => new Peer());
+  const [selfId, setSelfId] = React.useState<string>();
   const [conn, setConn] = React.useState<DataConnection | undefined>(undefined);
   const [peerId, setPeerId] = React.useState<string>("");
 
@@ -16,8 +17,8 @@ export default function Home() {
     }[]
   >([]);
 
-  const open = (id: string) => {
-    console.log(`Peer created: ${id}`);
+  const onOpen = (id: string) => {
+    setSelfId(id);
   };
 
   const onConnection = (dataConnection: DataConnection) => {
@@ -27,12 +28,11 @@ export default function Home() {
   };
 
   React.useEffect(() => {
-    console.log("setting peer info");
-    self?.on("open", open);
-    self?.on("connection", onConnection);
+    self.on("open", onOpen);
+    self.on("connection", onConnection);
     return () => {
-      self?.off("open");
-      self?.off("connection");
+      self.off("open");
+      self.off("connection");
     };
   }, [self]);
 
@@ -66,11 +66,11 @@ export default function Home() {
     return () => {
       conn?.off("data");
     };
-  }, [concatMessage, conn, messages, peerId]);
+  }, [conn, messages, peerId]);
 
   return (
-    <div className="border border-primary w-full h-full flex flex-col justify-center items-center">
-      <span>{self?.id}</span>
+    <div className="border border-primary w-full h-full flex flex-col justify-center items-center gap-2">
+      <span>{selfId}</span>
       <div className="flex w-[50%]">
         <Input
           placeholder="Peer ID"
@@ -92,14 +92,20 @@ export default function Home() {
             );
           })}
         </div>
-        <div className="flex w-full ">
+        <form
+          className="flex w-full "
+          onSubmit={(e) => {
+            e.preventDefault();
+            send();
+          }}
+        >
           <Input
             placeholder="Write something nice..."
             value={message}
             onChange={(e) => setMessage(e.currentTarget.value)}
           ></Input>
-          <Button onClick={send}>Send</Button>
-        </div>
+          <Button type="submit">Send</Button>
+        </form>
       </div>
     </div>
   );
